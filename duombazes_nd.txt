@@ -1,0 +1,56 @@
+a) Papildykite autorių lentelę įrašais.
+
+INSERT INTO `Books`.`Authors` (`authorId`, `name`) VALUES (NULL, 'John Smith'); 
+INSERT INTO `Books`.`Authors` (`authorId`, `name`) VALUES (NULL, 'Superman'); 
+
+b) Papildykite knygų lentelę, įrašais apie knygas, kurių autorius įrašėte prieš tai.
+
+INSERT INTO `Books`.`Books` (`bookId`, `authorId`, `title`, `year`) VALUES (NULL, '8', 'The book about John Smith', '2015'), (NULL, '9', 'The book about Superman', '2013'); 
+
+c) Išrinkite knygų informaciją prijungdami autorius iš autorių lentelės.
+
+SELECT Books.*, Authors.name FROM Books LEFT JOIN Authors ON Books.authorid = Authors.authorid 
+arba
+SELECT Books.*, Authors.name FROM Books LEFT JOIN Authors ON Books.authorid = Authors.authorid WHERE Books.authorid IS NOT NULL 
+
+d) Pakeiskite vienos knygos autorių į kitą.
+
+UPDATE `Books`.`Books` SET `authorId` = '8' WHERE `Books`.`bookId` = 5;
+e) Suskaičiuokite kiek knygų kiekvieno autoriaus yra duomenų bazėje (įtraukdami autorius kurie neturi knygų, bei neitraukdami šių autorių). 
+SELECT Books.*, Authors.name, COUNT(Books.authorid) AS total_books FROM `Books` LEFT JOIN Authors ON Authors.authorid = Books.authorid GROUP BY Books.authorid 
+SELECT Books.*, Authors.name, COUNT(Books.authorid) AS total_books FROM `Books` LEFT JOIN Authors ON Authors.authorid = Books.authorid WHERE Authors.name IS NOT NULL GROUP BY Books.authorid 
+f) Pašalinkite jūsų suvestus autorius.
+DELETE FROM Authors WHERE Authors.authorid IN (8, 9)
+g) Pašalinkite knygas, kurios neturi autorių.
+
+
+Papildykite duomenų bazę kad būtų galima:
+
+a) Suskirstyti knygas į žanrus.
+
+CREATE TABLE IF NOT EXISTS `Genres` (
+`genreid` int(11) NOT NULL,
+  `genrename` varchar(16) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ALTER TABLE `Genres`
+ ADD PRIMARY KEY (`genreid`), ADD KEY `genreid` (`genreid`);
+
+b) Knygos gali turėti vieną ir daugiau autorių.
+
+CREATE TABLE IF NOT EXISTS `Author2book` (
+`id` int(11) NOT NULL,
+  `authorid` int(11) NOT NULL,
+  `bookid` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ALTER TABLE `Author2book`
+ ADD PRIMARY KEY (`id`), ADD KEY `id` (`id`);
+
+ALTER TABLE `Books`
+  DROP `authorId`;
+
+c) Sutvarkyti duomenų bazės duomenis, jei reikia papildykite naujais.
+
+
+
+d) Išrinkite visas knygas su jų autoriais. (autorius, jei jų daugiau nei veinas atskirkite
+
