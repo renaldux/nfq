@@ -1,56 +1,82 @@
-a) Papildykite autorių lentelę įrašais.
+A) PAPILDYKITE AUTORIŲ LENTELĘ ĮRAŠAIS.  
 
-INSERT INTO `Books`.`Authors` (`authorId`, `name`) VALUES (NULL, 'John Smith'); 
-INSERT INTO `Books`.`Authors` (`authorId`, `name`) VALUES (NULL, 'Superman'); 
+INSERT INTO `Authors` (`authorId`, `name`) VALUES (NULL, 'John Smith'); 
+INSERT INTO `Authors` (`authorId`, `name`) VALUES (NULL, 'Superman'); 
 
-b) Papildykite knygų lentelę, įrašais apie knygas, kurių autorius įrašėte prieš tai.
+B) PAPILDYKITE KNYGŲ LENTELĘ, ĮRAŠAIS APIE KNYGAS, KURIŲ AUTORIUS ĮRAŠĖTE PRIEŠ TAI.
 
-INSERT INTO `Books`.`Books` (`bookId`, `authorId`, `title`, `year`) VALUES (NULL, '8', 'The book about John Smith', '2015'), (NULL, '9', 'The book about Superman', '2013'); 
+INSERT INTO `Books` (`authorId`, `title`, `year`) VALUES ('8', 'The book about John Smith', '2015'), ('9', 'The book about Superman', '2013'); 
 
-c) Išrinkite knygų informaciją prijungdami autorius iš autorių lentelės.
+C) IŠRINKITE KNYGŲ INFORMACIJĄ PRIJUNGDAMI AUTORIUS IŠ AUTORIŲ LENTELĖS.
 
 SELECT Books.*, Authors.name FROM Books LEFT JOIN Authors ON Books.authorid = Authors.authorid 
-arba
+arba jei reikalingos knygos tik su autoriais
 SELECT Books.*, Authors.name FROM Books LEFT JOIN Authors ON Books.authorid = Authors.authorid WHERE Books.authorid IS NOT NULL 
 
-d) Pakeiskite vienos knygos autorių į kitą.
+D) PAKEISKITE VIENOS KNYGOS AUTORIŲ Į KITĄ.
 
-UPDATE `Books`.`Books` SET `authorId` = '8' WHERE `Books`.`bookId` = 5;
-e) Suskaičiuokite kiek knygų kiekvieno autoriaus yra duomenų bazėje (įtraukdami autorius kurie neturi knygų, bei neitraukdami šių autorių). 
+UPDATE `Books` SET `authorId` = '8' WHERE `bookId` = 5;
+
+E) SUSKAIČIUOKITE KIEK KNYGŲ KIEKVIENO AUTORIAUS YRA DUOMENŲ BAZĖJE (ĮTRAUKDAMI AUTORIUS KURIE NETURI KNYGŲ, BEI NEITRAUKDAMI ŠIŲ AUTORIŲ). 
+
 SELECT Books.*, Authors.name, COUNT(Books.authorid) AS total_books FROM `Books` LEFT JOIN Authors ON Authors.authorid = Books.authorid GROUP BY Books.authorid 
+
 SELECT Books.*, Authors.name, COUNT(Books.authorid) AS total_books FROM `Books` LEFT JOIN Authors ON Authors.authorid = Books.authorid WHERE Authors.name IS NOT NULL GROUP BY Books.authorid 
-f) Pašalinkite jūsų suvestus autorius.
-DELETE FROM Authors WHERE Authors.authorid IN (8, 9)
-g) Pašalinkite knygas, kurios neturi autorių.
+F) PAŠALINKITE JŪSŲ SUVESTUS AUTORIUS.
 
+DELETE FROM Authors WHERE authorid > 7
 
-Papildykite duomenų bazę kad būtų galima:
+G) PAŠALINKITE KNYGAS, KURIOS NETURI AUTORIŲ.
 
-a) Suskirstyti knygas į žanrus.
+DELETE `Books` FROM `Books` LEFT JOIN `Authors` ON `Books`.`authorid`=`Authors`.`authorid` WHERE `Authors`.`authorid` IS NULL;
 
-CREATE TABLE IF NOT EXISTS `Genres` (
-`genreid` int(11) NOT NULL,
-  `genrename` varchar(16) NOT NULL
+PAPILDYKITE DUOMENŲ BAZĘ KAD BŪTŲ GALIMA:
+
+A) SUSKIRSTYTI KNYGAS Į ŽANRUS.
+
+CREATE TABLE Genres (
+    genreid INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    genrename VARCHAR(16) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-ALTER TABLE `Genres`
- ADD PRIMARY KEY (`genreid`), ADD KEY `genreid` (`genreid`);
 
-b) Knygos gali turėti vieną ir daugiau autorių.
 
-CREATE TABLE IF NOT EXISTS `Author2book` (
-`id` int(11) NOT NULL,
-  `authorid` int(11) NOT NULL,
-  `bookid` int(11) NOT NULL
+B) KNYGOS GALI TURĖTI VIENĄ IR DAUGIAU AUTORIŲ.
+
+#create a new table for many to many relationship
+CREATE TABLE `Author2book` (
+    `id` INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `authorid` INT(11) NOT NULL,
+    `bookid` INT(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-ALTER TABLE `Author2book`
- ADD PRIMARY KEY (`id`), ADD KEY `id` (`id`);
 
-ALTER TABLE `Books`
-  DROP `authorId`;
+C) SUTVARKYTI DUOMENŲ BAZĖS DUOMENIS, JEI REIKIA PAPILDYKITE NAUJAIS.
 
-c) Sutvarkyti duomenų bazės duomenis, jei reikia papildykite naujais.
+#insert data into newly created table
+INSERT INTO Author2book (`authorid`, `bookid`)
+  SELECT `b`.`authorid`, `b`.`bookid`
+  FROM `Books` as `b` WHERE `b`.`authorid` IS NOT NULL AND `b`.`bookid` IS NOT NULL;
 
+#remove authorid from Books table
+ALTER TABLE `Books` DROP `authorId`;
 
+D) IŠRINKITE VISAS KNYGAS SU JŲ AUTORIAIS. (AUTORIUS, JEI JŲ DAUGIAU NEI VEINAS ATSKIRKITE KABLELIAIS)
 
-d) Išrinkite visas knygas su jų autoriais. (autorius, jei jų daugiau nei veinas atskirkite
+SELECT `b`.*, GROUP_CONCAT(`a`.`name` SEPARATOR ',') FROM `Books` AS `b` 
+LEFT JOIN `Author2book` AS `a2b` ON `a2b`.`bookid` = `b`.`bookid` 
+LEFT JOIN `Authors` AS `a` ON `a`.`authorid` = `a2b`.`authorid` 
+GROUP BY (`b`.`bookid`) 
 
+E) PAPILDYKITE KNYGŲ LENTELĘ, KAD GALETUMĖTE IŠSAUGOTI ORGINALŲ KNYGOS PAVADINIMĄ. (PAVADINIME IŠSAUGOKITE, LIETUVIŠKAS RAIDES KAIP Ą,Ė,Š IR PAN.)
+
+ALTER TABLE `Books` MODIFY `title` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL; 
+
+PARUOŠKITE DUOMENŲ BAZĖS KOPIJĄ.
+
+mysqldump Books > dump.sql
+mysqladmin create Books2
+mysql Books2 < dump.sql
+
+PARUOŠeKITE DUOMENŲ BAZĖS ATNAUJINIMO SKRIPTĄ. (STRUKTŪROS IR PRADINIŲ DUOMENŲ).
+mysqladmin -u[user] -p[password] drop table Books
+mysqladmin create table Books
+mysql Books < dump.sql
