@@ -72,19 +72,11 @@ ALTER TABLE `Books` MODIFY `title` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_
 
 PARUOŠKITE DUOMENŲ BAZĖS KOPIJĄ.
 
-mysqldump -u[usernam] -p[pass] Books > dbcopy.sql
+mysqldump Books > dump.sql
+mysqladmin create Books2
+mysql Books2 < dump.sql
 
 PARUOŠeKITE DUOMENŲ BAZĖS ATNAUJINIMO SKRIPTĄ. (STRUKTŪROS IR PRADINIŲ DUOMENŲ).
-DELETE `Books` FROM `Books` LEFT JOIN `Authors` ON `Books`.`authorid`=`Authors`.`authorid` WHERE `Authors`.`authorid` IS NULL;
-CREATE TABLE Genres (
-    genreid INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    genrename VARCHAR(16) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-CREATE TABLE `Author2book` (
-    `id` INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    `authorid` INT(11) NOT NULL,
-    `bookid` INT(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-INSERT INTO Author2book (`authorid`, `bookid`) SELECT `b`.`authorid`, `b`.`bookid` FROM `Books` as `b` WHERE `b`.`authorid` IS NOT NULL AND `b`.`bookid` IS NOT NULL;
-ALTER TABLE `Books` DROP `authorId`;
-ALTER TABLE `Books` MODIFY `title` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL; 
+mysqladmin -u[user] -p[password] drop table Books
+mysqladmin create table Books
+mysql Books < dump.sql
